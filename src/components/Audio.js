@@ -30,7 +30,7 @@ const fetchLastAmplitude = () => {
   });
 };
 
-function Audio() {
+function Audio({ audioLength }) {
   const [amplitudeFromIndexdb, setAmplitudeFromIndexdb] = useState(null); // fetch the latest amplitude value from index db
   const [rmsValue, setRmsValue] = useState(null); // hold the rms amplitude value from indexdb
   const [realTimeAmplitude, setRealTimeAmplitude] = useState('N/A'); // for storing real time audio amplitude value of audio
@@ -41,7 +41,7 @@ function Audio() {
   const [isRecording, setIsRecording] = useState(false); // condition to check of environment sound recording
   const mediaRecorderRef = useRef(null); // from web audio api 
   const audioChunksRef = useRef([]); // from web audio api 
-  const [timeLeft, setTimeLeft] = useState(10); // Starting from 10 seconds
+  const [timeLeft, setTimeLeft] = useState(audioLength/1000); // Starting from 10 seconds
   const [popUp, setPopUp] = useState(""); // displaying the warning content
   const [LowerRange, setLowerRange] = useState(0.0) // store lower range amplitude value
   const [HigherRange, setHigherRange] = useState(0.0) // store higher range amplitude value
@@ -76,7 +76,7 @@ function Audio() {
     if (isRecording) {
       const timer = setTimeout(() => {
         stopRecording();
-      }, 10000); // Automatically stop recording after 10 seconds
+      }, audioLength); // Automatically stop recording after 10 seconds
 
       return () => clearTimeout(timer); // Cleanup when recording stops
     }
@@ -88,7 +88,7 @@ function Audio() {
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       setIsRecording(true);
-      setTimeLeft(10);
+      setTimeLeft(audioLength/1000);
       const countdownInterval = setInterval(() => {
         setTimeLeft(prevTime => {
           if (prevTime <= 1) {

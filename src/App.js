@@ -4,7 +4,7 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-       <Audio />
+       <Audio audioLength={10000} />
       </div>
     );
   }
