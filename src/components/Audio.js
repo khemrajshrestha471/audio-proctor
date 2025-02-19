@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+
 // indexdb credentials
 const DB_NAME = "AudioRMSDatabase";
 const STORE_NAME = "rmsValues";
