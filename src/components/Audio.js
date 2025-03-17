@@ -179,9 +179,40 @@ function Audio({ audioLength }) {
   };
 
 
+  // const handleAmplitudeUpdate = async (meanAmplitude) => {
+  //   setRealTimeAmplitude(meanAmplitude);
+  //   let meanStr = meanAmplitude.toString();
+  //   let decimalPart = meanStr.includes('.') ? meanStr.split('.')[1] : '';
+  //   // Find the position of the first non-zero digit in the decimal part
+  //   let firstNonZeroIndex = decimalPart.search(/[1-9]/);
+  //   // Calculate the dynamic adjustment factor
+  //   let adjustmentFactor = firstNonZeroIndex !== -1
+  //     ? parseFloat('0.' + '0'.repeat(firstNonZeroIndex) + '09')
+  //     : 0.000000001;
+  //   if (rmsValue !== null) {
+  //     let meanAmplitudeNum = parseFloat(rmsValue);
+  //     let meanAmplitudeRange = [
+  //       (meanAmplitudeNum - adjustmentFactor) > 0.03
+  //         ? (meanAmplitudeNum - adjustmentFactor)
+  //         : (adjustmentFactor),
+  //       (meanAmplitudeNum + adjustmentFactor) > 0.03
+  //         ? (meanAmplitudeNum + adjustmentFactor)
+  //         : (meanAmplitudeNum + (adjustmentFactor * 100))
+  //     ];
+  //     console.log(meanAmplitudeRange)
+  //     setLowerRange(meanAmplitudeRange[0])
+  //     setHigherRange(meanAmplitudeRange[1])
+  //   }
+  // };
+
+
+
+
   const handleAmplitudeUpdate = async (meanAmplitude) => {
+    let realTimeAmp = parseFloat(meanAmplitude);
+    // console.log("Real", realTimeAmp)
     setRealTimeAmplitude(meanAmplitude);
-    let meanStr = meanAmplitude.toString();
+    let meanStr = rmsValue.toString();
     let decimalPart = meanStr.includes('.') ? meanStr.split('.')[1] : '';
     // Find the position of the first non-zero digit in the decimal part
     let firstNonZeroIndex = decimalPart.search(/[1-9]/);
@@ -191,18 +222,31 @@ function Audio({ audioLength }) {
       : 0.000000001;
     if (rmsValue !== null) {
       let meanAmplitudeNum = parseFloat(rmsValue);
-      let meanAmplitudeRange = [
-        (meanAmplitudeNum - adjustmentFactor) > 0.05
-          ? (meanAmplitudeNum - adjustmentFactor)
-          : (adjustmentFactor),
-        (meanAmplitudeNum + adjustmentFactor) > 0.05
+            let meanAmplitudeRange = [
+        (meanAmplitudeNum - adjustmentFactor) > 0.03
+          ? (meanAmplitudeNum - adjustmentFactor)/3
+          : (adjustmentFactor)/3,
+          realTimeAmp,
+        (meanAmplitudeNum + adjustmentFactor) > 0.03
           ? (meanAmplitudeNum + adjustmentFactor)
-          : (meanAmplitudeNum + (adjustmentFactor * 50))
+          : (meanAmplitudeNum + (adjustmentFactor * 30))
       ];
       setLowerRange(meanAmplitudeRange[0])
-      setHigherRange(meanAmplitudeRange[1])
+      setHigherRange(meanAmplitudeRange[2])
+      console.log(meanAmplitudeRange)
+      if (meanAmplitude > meanAmplitudeRange[2]) {
+        console.log("Higher", meanAmplitudeRange)
+      }
+      if (meanAmplitude < meanAmplitudeRange[0]) {
+        console.log("Smaller", meanAmplitudeRange)
+      }
+
     }
   };
+
+
+
+
 
   const startCapturingAmplitude = () => {
     if (audioStreamRef.current) return;
@@ -257,8 +301,50 @@ function Audio({ audioLength }) {
     setIsCapturing(false);
   };
 
+  // useEffect(() => {
+  //   if (isCapturing) {
+  //     if (realTimeAmplitude > HigherRange && !showingPopup) {
+  //       setPopUp("Larger Noise");
+  //       setShowingPopup(true);
+  //       setLastPopUpTime(Date.now()); // Set the time when popup is shown
+  //       setTimeout(() => {
+  //         setPopUp("");
+  //         setShowingPopup(false);
+  //       }, 2000); // Popup is shown for 2 seconds
+  //     } else if (realTimeAmplitude < LowerRange && realTimeAmplitude !== 0 && !showingPopup) {
+  //       setPopUp("Smaller Noise");
+  //       setShowingPopup(true);
+  //       setLastPopUpTime(Date.now());
+  //       setTimeout(() => {
+  //         setPopUp("");
+  //         setShowingPopup(false);
+  //       }, 2000);
+  //     } else if (realTimeAmplitude === 0 && !showingPopup) {
+  //       setPopUp("No Sound Detected");
+  //       setShowingPopup(true);
+  //       setLastPopUpTime(Date.now());
+  //       setTimeout(() => {
+  //         setPopUp("");
+  //         setShowingPopup(false);
+  //       }, 2000);
+  //     }
+  //   }
+
+  //   // Display popup for at least 5 sec interval
+  //   if (showingPopup === false && Date.now() - lastPopUpTime >= 5000) {
+  //     setShowingPopup(false);
+  //   }
+  // }, [realTimeAmplitude, isCapturing, lastPopUpTime, showingPopup]);
+
+
+
   useEffect(() => {
     if (isCapturing) {
+      // Ensure HigherRange and LowerRange are properly set
+      if (HigherRange === 0 || LowerRange === 0) {
+        return; // Exit if ranges are not yet set
+      }
+
       if (realTimeAmplitude > HigherRange && !showingPopup) {
         setPopUp("Larger Noise");
         setShowingPopup(true);
@@ -290,7 +376,9 @@ function Audio({ audioLength }) {
     if (showingPopup === false && Date.now() - lastPopUpTime >= 5000) {
       setShowingPopup(false);
     }
-  }, [realTimeAmplitude, isCapturing, lastPopUpTime, showingPopup]);
+  }, [realTimeAmplitude, isCapturing, lastPopUpTime, showingPopup, HigherRange, LowerRange]);
+
+
 
 
   return (
